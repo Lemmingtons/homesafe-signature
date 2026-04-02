@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Signatures | Homesafe Franchise Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f0f2f5;
+    color: #212529;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    background: #1e2a3a;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .sidebar-logo img {
+    width: 160px;
+    height: auto;
+    filter: brightness(0) invert(1);
+  }
+
+  .sidebar-logo .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+  }
+
+  .sidebar-logo .logo-sub {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 0;
+  }
+
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .sidebar-nav a.active {
+    color: #fff;
+    background: rgba(217,230,112,0.15);
+    border-left: 3px solid #D9E670;
+    padding-left: 17px;
+  }
+
+  .sidebar-nav a .nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+    opacity: 0.7;
+  }
+
+  .sidebar-nav a.active .nav-icon { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .sidebar-footer a {
+    color: rgba(255,255,255,0.4);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ── Main Content ── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: #fff;
+    padding: 16px 32px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+  }
+
+  .topbar .user-badge {
+    font-size: 12px;
+    color: #6B6B6B;
+    background: #f3f4f6;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .content {
+    padding: 28px 32px;
+  }
+
+  /* ── Two Column Layout ── */
+  .generator-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-body {
+    padding: 24px;
+  }
+
+  /* ── Form ── */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B6B6B;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #212529;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #D9E670;
+    box-shadow: 0 0 0 3px rgba(217,230,112,0.15);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 12px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: #D9E670;
+    color: #1e2a3a;
+  }
+
+  .btn-primary:hover { background: #c5d35e; }
+
+  .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .btn-secondary:hover { background: #e5e7eb; }
+
+  .btn .btn-feedback {
+    display: none;
+    font-weight: 600;
+  }
+
+  .btn.copied .btn-label { display: none; }
+  .btn.copied .btn-feedback { display: inline; }
+
+  /* ── Preview ── */
+  .preview-area {
+    background: #fff;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 140px;
+  }
+
+  .preview-area.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* ── Instructions ── */
+  .instructions {
+    margin-top: 20px;
+  }
+
+  .instructions summary {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    padding: 10px 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .instructions summary::before {
+    content: "\25B6";
+    font-size: 9px;
+    transition: transform 0.2s;
+  }
+
+  .instructions[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .instructions ol {
+    padding: 12px 0 0 20px;
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.8;
+  }
+
+  .instructions code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  /* ── Photo Upload ── */
+  .photo-upload-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .photo-preview {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    border: 2px dashed #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .photo-preview.has-photo {
+    border: 2px solid #D9E670;
+  }
+
+  .photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .photo-placeholder {
+    font-size: 9px;
+    color: #9ca3af;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .photo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .photo-upload-btn {
+    padding: 7px 14px !important;
+    font-size: 12px !important;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .photo-remove-btn {
+    padding: 5px 14px !important;
+    font-size: 11px !important;
+    color: #9ca3af !important;
+  }
+
+  .photo-hint {
+    font-size: 10px;
+    color: #9ca3af;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .generator-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">HOMESAFE</div>
+    <div class="logo-sub">Franchise Portal</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#"><span class="nav-icon">&#9634;</span> Dashboard</a>
+    <a href="#"><span class="nav-icon">&#9782;</span> Franchisees</a>
+    <a href="#"><span class="nav-icon">&#9787;</span> Users</a>
+    <a href="#"><span class="nav-icon">&#9881;</span> Logo</a>
+    <a href="#" class="active"><span class="nav-icon">&#9993;</span> Email Signatures</a>
+    <a href="#"><span class="nav-icon">&#9733;</span> Knowledge Base</a>
+  </div>
+  <div class="sidebar-footer">
+    <a href="#">Logout</a>
+  </div>
+</nav>
+
+<!-- ── Main Content ── -->
+<div class="main">
+  <div class="topbar">
+    <h1>Email Signature Generator</h1>
+    <span class="user-badge">Homesafe Inspections</span>
+  </div>
+
+  <div class="content">
+    <!-- Two Column Grid -->
+    <div class="generator-grid">
+
+      <!-- Left: Form -->
+      <div class="card">
+        <div class="card-header">Contact Details</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="fullName" placeholder="Ryan Lehmann" oninput="renderPreview()">
+            </div>
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" id="title" placeholder="Director & Franchisor" oninput="renderPreview()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" id="phone" placeholder="0431 924 630" oninput="renderPreview()">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="email" placeholder="ryan@homesafeinspections.com.au" oninput="renderPreview()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Company</label>
+            <select id="company" onchange="renderPreview()">
+              <option value="bpi">Homesafe Building & Pest Inspections</option>
+              <option value="strata">Homesafe Strata Inspections</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Headshot Photo</label>
+            <div class="photo-upload-area">
+              <div class="photo-preview" id="photoPreviewThumb">
+                <span class="photo-placeholder">No photo</span>
+              </div>
+              <div class="photo-controls">
+                <label class="btn btn-secondary photo-upload-btn" for="photoFile">
+                  <span>Upload Photo</span>
+                </label>
+                <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoUpload(this)" style="display: none;">
+                <button class="btn btn-secondary photo-remove-btn" id="photoRemoveBtn" onclick="removePhoto()" style="display: none;">Remove</button>
+                <span class="photo-hint">JPG or PNG, square crop recommended</span>
+              </div>
+            </div>
+            <input type="hidden" id="photoUrl">
+          </div>
+
+          <div class="section-label">Social Links</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Website</label>
+              <input type="url" id="website" placeholder="https://www.homesafeinspections.com.au" oninput="renderPreview()">
+            </div>
+            <div class="form-group">
+              <label>Instagram</label>
+              <input type="url" id="instagram" placeholder="https://instagram.com/..." oninput="renderPreview()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Facebook</label>
+              <input type="url" id="facebook" placeholder="https://facebook.com/..." oninput="renderPreview()">
+            </div>
+            <div class="form-group">
+              <label>LinkedIn</label>
+              <input type="url" id="linkedin" placeholder="https://linkedin.com/..." oninput="renderPreview()">
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="copyHTML(this)">
+              <span class="btn-label">Copy Signature HTML</span>
+              <span class="btn-feedback">Copied!</span>
+            </button>
+            <button class="btn btn-secondary" onclick="copyPlainText(this)">
+              <span class="btn-label">Copy Plain Text</span>
+              <span class="btn-feedback">Copied!</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Preview -->
+      <div class="card">
+        <div class="card-header">Live Preview</div>
+        <div class="card-body">
+          <div id="signature-preview" class="preview-area empty">
+            Fill in the form or select a preset to preview your signature
+          </div>
+
+          <details class="instructions">
+            <summary>How to add this signature to Gmail</summary>
+            <ol>
+              <li>Click <strong>"Copy Signature HTML"</strong> above</li>
+              <li>Open <strong>Gmail</strong> and click the gear icon (top right)</li>
+              <li>Click <strong>"See all settings"</strong></li>
+              <li>Scroll down to the <strong>"Signature"</strong> section</li>
+              <li>Click <strong>"Create new"</strong> and give it a name</li>
+              <li>Click inside the signature editor, press <code>Ctrl+A</code> (or <code>Cmd+A</code> on Mac) then <code>Ctrl+V</code> (<code>Cmd+V</code>)</li>
+              <li>Scroll down and click <strong>"Save Changes"</strong></li>
+              <li>Set it as your default signature for new emails and replies</li>
+            </ol>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Social Media Icon SVGs (base64 encoded PNGs for Gmail compatibility) ──
+// Using simple monochrome circle icons
+const ICONS = {
+  website: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  instagram: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`,
+  facebook: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#6B6B6B" stroke="none"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+  linkedin: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#6B6B6B" stroke="none"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`
+};
+
+// Convert SVG to base64 data URI for email compatibility
+function svgToDataUri(svg) {
+  return 'data:image/svg+xml;base64,' + btoa(svg);
+}
+
+// For Gmail, we need PNG data URIs. SVG won't work in Gmail.
+// We'll use hosted icon images from a CDN as fallback, or render to canvas.
+// For now, we use simple Unicode/text icons as the most reliable approach,
+// and provide hosted image URLs for the actual signature.
+
+// Hosted social icons (using a reliable public CDN)
+const HOSTED_ICONS = {
+  website:   'https://img.icons8.com/ios-filled/24/6B6B6B/globe--v1.png',
+  instagram: 'https://img.icons8.com/ios-filled/24/6B6B6B/instagram-new--v1.png',
+  facebook:  'https://img.icons8.com/ios-filled/24/6B6B6B/facebook-new.png',
+  linkedin:  'https://img.icons8.com/ios-filled/24/6B6B6B/linkedin.png'
+};
+
+function handlePhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUri = e.target.result;
+    document.getElementById('photoUrl').value = dataUri;
+
+    // Update thumbnail
+    const thumb = document.getElementById('photoPreviewThumb');
+    thumb.innerHTML = '<img src="' + dataUri + '" alt="Photo">';
+    thumb.classList.add('has-photo');
+
+    // Show remove button
+    document.getElementById('photoRemoveBtn').style.display = '';
+
+    renderPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  document.getElementById('photoUrl').value = '';
+  document.getElementById('photoFile').value = '';
+
+  const thumb = document.getElementById('photoPreviewThumb');
+  thumb.innerHTML = '<span class="photo-placeholder">No photo</span>';
+  thumb.classList.remove('has-photo');
+
+  document.getElementById('photoRemoveBtn').style.display = 'none';
+
+  renderPreview();
+}
+
+function getFormData() {
+  return {
+    fullName: document.getElementById('fullName').value.trim(),
+    title: document.getElementById('title').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    photoUrl: document.getElementById('photoUrl').value.trim(),
+    company: document.getElementById('company').value,
+    website: document.getElementById('website').value.trim(),
+    instagram: document.getElementById('instagram').value.trim(),
+    facebook: document.getElementById('facebook').value.trim(),
+    linkedin: document.getElementById('linkedin').value.trim()
+  };
+}
+
+function buildSignatureHTML(data) {
+  if (!data.fullName) return '';
+
+  // Swap logo based on company selection
+  const LOGO_URLS = {
+    bpi: 'https://homesafe.blob.core.windows.net/images/homesafe-logo.png',
+    // TODO: Replace with Azure Blob URL once uploaded — using local asset for now
+    strata: 'assets/homesafe-strata-logo.png'
+  };
+  const logoUrl = LOGO_URLS[data.company] || LOGO_URLS.bpi;
+
+  // Build social icons row
+  let socialCells = '';
+  const socials = [
+    { url: data.website, icon: HOSTED_ICONS.website, alt: 'Website' },
+    { url: data.instagram, icon: HOSTED_ICONS.instagram, alt: 'Instagram' },
+    { url: data.facebook, icon: HOSTED_ICONS.facebook, alt: 'Facebook' },
+    { url: data.linkedin, icon: HOSTED_ICONS.linkedin, alt: 'LinkedIn' }
+  ];
+
+  socials.forEach(s => {
+    if (s.url) {
+      socialCells += `<td style="padding-right: 8px;"><a href="${s.url}" target="_blank" style="text-decoration: none;"><img src="${s.icon}" alt="${s.alt}" width="22" height="22" style="display: block; width: 22px; height: 22px; border: 0;" /></a></td>`;
+    }
+  });
+
+  let socialRow = '';
+  if (socialCells) {
+    socialRow = `
+        <tr>
+          <td style="padding-top: 10px;">
+            <table cellpadding="0" cellspacing="0" border="0"><tr>${socialCells}</tr></table>
+          </td>
+        </tr>`;
+  }
+
+  // Photo column
+  let photoCell = '';
+  if (data.photoUrl) {
+    photoCell = `
+    <td style="vertical-align: top; padding-right: 18px;">
+      <img src="${data.photoUrl}" alt="${data.fullName}" width="90" height="90" style="border-radius: 50%; display: block; width: 90px; height: 90px; object-fit: cover; border: 0;" />
+    </td>`;
+  }
+
+  // Phone + email line
+  let contactLine = '';
+  if (data.phone && data.email) {
+    contactLine = `<a href="tel:${data.phone.replace(/\s/g, '')}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.phone}</a><span style="color: #d1d5db; padding-left: 10px; padding-right: 10px;">|</span><a href="mailto:${data.email}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.email}</a>`;
+  } else if (data.phone) {
+    contactLine = `<a href="tel:${data.phone.replace(/\s/g, '')}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.phone}</a>`;
+  } else if (data.email) {
+    contactLine = `<a href="mailto:${data.email}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.email}</a>`;
+  }
+
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #212529; line-height: 1.4;">
+  <tr>
+    ${photoCell}
+    <td style="vertical-align: top;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding-bottom: 10px;">
+            <img src="${logoUrl}" alt="Homesafe Inspections" width="180" style="display: block; width: 180px; height: auto; border: 0;" />
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-bottom: 10px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top: 2px solid #D9E670; font-size: 1px; line-height: 1px; height: 1px;">&nbsp;</td></tr></table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-bottom: 4px;">
+            <strong style="font-size: 14px; color: #212529; font-family: Arial, Helvetica, sans-serif;">${data.fullName}</strong>
+            <br />
+            <span style="font-size: 12px; color: #6B6B6B; font-family: Arial, Helvetica, sans-serif;">${data.title}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-size: 12px; color: #6B6B6B; font-family: Arial, Helvetica, sans-serif;">
+            ${contactLine}
+          </td>
+        </tr>
+        ${socialRow}
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+function renderPreview() {
+  const data = getFormData();
+  const preview = document.getElementById('signature-preview');
+  const html = buildSignatureHTML(data);
+
+  if (!html) {
+    preview.innerHTML = 'Fill in the form or select a preset to preview your signature';
+    preview.classList.add('empty');
+  } else {
+    preview.innerHTML = html;
+    preview.classList.remove('empty');
+  }
+}
+
+async function copyHTML(btn) {
+  const data = getFormData();
+  const html = buildSignatureHTML(data);
+
+  if (!html) {
+    alert('Please fill in at least your name to generate a signature.');
+    return;
+  }
+
+  try {
+    const blob = new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([html], { type: 'text/plain' })
+    });
+    await navigator.clipboard.write([blob]);
+    showCopied(btn);
+  } catch (err) {
+    // Fallback: copy raw HTML as text
+    try {
+      await navigator.clipboard.writeText(html);
+      showCopied(btn);
+    } catch (e) {
+      alert('Could not copy to clipboard. Please select the preview and copy manually.');
+    }
+  }
+}
+
+async function copyPlainText(btn) {
+  const data = getFormData();
+
+  if (!data.fullName) {
+    alert('Please fill in at least your name.');
+    return;
+  }
+
+  let lines = [data.fullName];
+  if (data.title) lines.push(data.title);
+  if (data.phone) lines.push(data.phone);
+  if (data.email) lines.push(data.email);
+  if (data.website) lines.push(data.website);
+
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    showCopied(btn);
+  } catch (e) {
+    alert('Could not copy to clipboard.');
+  }
+}
+
+function showCopied(btn) {
+  btn.classList.add('copied');
+  setTimeout(() => btn.classList.remove('copied'), 2000);
+}
+
+// Render on load if any fields are populated
+document.addEventListener('DOMContentLoaded', renderPreview);
+</script>
+
+</body>
+</html>
