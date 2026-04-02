@@ -462,21 +462,24 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Headshot Photo</label>
+            <label>Headshot Photo URL</label>
+            <input type="url" id="photoUrl" placeholder="https://example.com/your-photo.jpg" oninput="updatePhotoFromUrl()">
+            <span class="photo-hint">Paste a publicly hosted image URL (Gmail won't display uploaded files)</span>
+          </div>
+          <div class="form-group">
             <div class="photo-upload-area">
               <div class="photo-preview" id="photoPreviewThumb">
                 <span class="photo-placeholder">No photo</span>
               </div>
               <div class="photo-controls">
                 <label class="btn btn-secondary photo-upload-btn" for="photoFile">
-                  <span>Upload Photo</span>
+                  <span>Upload to preview</span>
                 </label>
                 <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoUpload(this)" style="display: none;">
                 <button class="btn btn-secondary photo-remove-btn" id="photoRemoveBtn" onclick="removePhoto()" style="display: none;">Remove</button>
-                <span class="photo-hint">JPG or PNG, square crop recommended</span>
+                <span class="photo-hint">Upload sets preview only — paste a hosted URL above for Gmail</span>
               </div>
             </div>
-            <input type="hidden" id="photoUrl">
           </div>
 
           <div class="section-label">Social Links</div>
@@ -503,7 +506,7 @@
 
           <div class="btn-row">
             <button class="btn btn-primary" onclick="copyHTML(this)">
-              <span class="btn-label">Copy Signature HTML</span>
+              <span class="btn-label">Copy for Gmail</span>
               <span class="btn-feedback">Copied!</span>
             </button>
             <button class="btn btn-secondary" onclick="copyPlainText(this)">
@@ -577,19 +580,34 @@ function handlePhotoUpload(input) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUri = e.target.result;
-    document.getElementById('photoUrl').value = dataUri;
 
-    // Update thumbnail
+    // Update thumbnail preview only (don't set URL field — base64 breaks Gmail)
     const thumb = document.getElementById('photoPreviewThumb');
     thumb.innerHTML = '<img src="' + dataUri + '" alt="Photo">';
     thumb.classList.add('has-photo');
-
-    // Show remove button
     document.getElementById('photoRemoveBtn').style.display = '';
 
+    // If no hosted URL is set, use base64 for preview only
+    if (!document.getElementById('photoUrl').value.trim()) {
+      thumb.dataset.previewOnly = dataUri;
+    }
     renderPreview();
   };
   reader.readAsDataURL(file);
+}
+
+function updatePhotoFromUrl() {
+  const url = document.getElementById('photoUrl').value.trim();
+  const thumb = document.getElementById('photoPreviewThumb');
+  if (url) {
+    thumb.innerHTML = '<img src="' + url + '" alt="Photo">';
+    thumb.classList.add('has-photo');
+    delete thumb.dataset.previewOnly;
+  } else if (!thumb.dataset.previewOnly) {
+    thumb.innerHTML = '<span class="photo-placeholder">No photo</span>';
+    thumb.classList.remove('has-photo');
+  }
+  renderPreview();
 }
 
 function removePhoto() {
@@ -599,6 +617,7 @@ function removePhoto() {
   const thumb = document.getElementById('photoPreviewThumb');
   thumb.innerHTML = '<span class="photo-placeholder">No photo</span>';
   thumb.classList.remove('has-photo');
+  delete thumb.dataset.previewOnly;
 
   document.getElementById('photoRemoveBtn').style.display = 'none';
 
@@ -732,17 +751,31 @@ async function copyHTML(btn) {
     return;
   }
 
+  // Build plain text fallback
+  let plain = [data.fullName];
+  if (data.title) plain.push(data.title);
+  if (data.phone) plain.push(data.phone);
+  if (data.email) plain.push(data.email);
+  if (data.website) plain.push(data.website);
+
   try {
     const blob = new ClipboardItem({
       'text/html': new Blob([html], { type: 'text/html' }),
-      'text/plain': new Blob([html], { type: 'text/plain' })
+      'text/plain': new Blob([plain.join('\n')], { type: 'text/plain' })
     });
     await navigator.clipboard.write([blob]);
     showCopied(btn);
   } catch (err) {
-    // Fallback: copy raw HTML as text
+    // Fallback: select and copy from the preview element
     try {
-      await navigator.clipboard.writeText(html);
+      const preview = document.getElementById('signature-preview');
+      const range = document.createRange();
+      range.selectNodeContents(preview);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('copy');
+      sel.removeAllRanges();
       showCopied(btn);
     } catch (e) {
       alert('Could not copy to clipboard. Please select the preview and copy manually.');
