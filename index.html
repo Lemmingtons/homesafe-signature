@@ -274,6 +274,8 @@
     border-radius: 8px;
     padding: 24px;
     min-height: 140px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .preview-area.empty {
@@ -387,6 +389,137 @@
     color: #9ca3af;
   }
 
+  /* ── Sample Signatures Carousel ── */
+  .carousel-section {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 20px 24px 16px;
+    margin-bottom: 28px;
+  }
+
+  .carousel-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+
+  .carousel-section-sub {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+  }
+
+  .carousel-wrapper {
+    position: relative;
+    margin: 0 28px;
+  }
+
+  .carousel-viewport {
+    overflow: hidden;
+    border: 1px solid #f0f2f5;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+
+  .carousel-track {
+    display: flex;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .carousel-slide {
+    min-width: 100%;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .carousel-slide-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 14px;
+  }
+
+  /* This is the key fix: let signature content scroll horizontally
+     instead of being clipped, so it's always fully readable on mobile */
+  .carousel-slide-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .carousel-slide-content::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  .carousel-slide-content::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 3px;
+  }
+
+  .carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    color: #374151;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+
+  .carousel-arrow:hover {
+    background: #f3f4f6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+
+  .carousel-prev { left: -16px; }
+  .carousel-next { right: -16px; }
+
+  .carousel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    gap: 6px;
+  }
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d1d5db;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    transition: background 0.2s, width 0.2s;
+  }
+
+  .carousel-dot.active {
+    background: #1e2a3a;
+    width: 18px;
+    border-radius: 3px;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 1100px) {
     .generator-grid { grid-template-columns: 1fr; }
@@ -395,6 +528,17 @@
   @media (max-width: 768px) {
     .sidebar { display: none; }
     .main { margin-left: 0; }
+  }
+
+  @media (max-width: 600px) {
+    .content { padding: 16px; }
+    .topbar { padding: 12px 16px; }
+    .carousel-section { padding: 16px 16px 12px; margin-bottom: 16px; }
+    .carousel-wrapper { margin: 0 20px; }
+    .carousel-slide { padding: 14px; }
+    .carousel-arrow { width: 26px; height: 26px; font-size: 14px; }
+    .carousel-prev { left: -13px; }
+    .carousel-next { right: -13px; }
   }
 </style>
 </head>
@@ -427,6 +571,21 @@
   </div>
 
   <div class="content">
+
+    <!-- Sample Signatures Carousel -->
+    <div class="carousel-section">
+      <div class="carousel-section-title">&#9993; Example Signatures</div>
+      <div class="carousel-section-sub">See how your signature will look — fill the form below to customise</div>
+      <div class="carousel-wrapper">
+        <div class="carousel-viewport">
+          <div class="carousel-track" id="carouselTrack"></div>
+        </div>
+        <button class="carousel-arrow carousel-prev" id="carouselPrev" aria-label="Previous">&#8249;</button>
+        <button class="carousel-arrow carousel-next" id="carouselNext" aria-label="Next">&#8250;</button>
+      </div>
+      <div class="carousel-footer" id="carouselDots"></div>
+    </div>
+
     <!-- Two Column Grid -->
     <div class="generator-grid">
 
@@ -810,8 +969,122 @@ function showCopied(btn) {
   setTimeout(() => btn.classList.remove('copied'), 2000);
 }
 
+// ── Sample Signatures Carousel ──
+const SAMPLE_SIGS = [
+  {
+    label: 'Building & Pest Inspections',
+    data: {
+      fullName: 'Ryan Lehmann',
+      title: 'Director & Franchisor',
+      phone: '0431 924 630',
+      email: 'ryan@homesafeinspections.com.au',
+      photoUrl: '',
+      company: 'bpi',
+      website: 'https://www.homesafeinspections.com.au',
+      instagram: 'https://instagram.com/homesafeinspections',
+      facebook: '',
+      linkedin: ''
+    }
+  },
+  {
+    label: 'Strata Inspections',
+    data: {
+      fullName: 'Sarah Mitchell',
+      title: 'Franchise Owner',
+      phone: '0412 345 678',
+      email: 'sarah@homesafeinspections.com.au',
+      photoUrl: '',
+      company: 'strata',
+      website: 'https://www.homesafeinspections.com.au',
+      instagram: '',
+      facebook: 'https://facebook.com/homesafeinspections',
+      linkedin: 'https://linkedin.com/company/homesafe'
+    }
+  },
+  {
+    label: 'Building & Pest — with Socials',
+    data: {
+      fullName: 'Tom Wilson',
+      title: 'Senior Inspector',
+      phone: '0421 987 654',
+      email: 'tom@homesafeinspections.com.au',
+      photoUrl: '',
+      company: 'bpi',
+      website: 'https://www.homesafeinspections.com.au',
+      instagram: 'https://instagram.com/homesafeinspections',
+      facebook: 'https://facebook.com/homesafeinspections',
+      linkedin: 'https://linkedin.com/company/homesafe'
+    }
+  }
+];
+
+function initCarousel() {
+  const track = document.getElementById('carouselTrack');
+  const dotsEl = document.getElementById('carouselDots');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  if (!track) return;
+
+  let current = 0;
+  let autoTimer = null;
+
+  // Build slides
+  SAMPLE_SIGS.forEach((sample) => {
+    const slide = document.createElement('div');
+    slide.className = 'carousel-slide';
+    slide.innerHTML =
+      '<div class="carousel-slide-label">' + sample.label + '</div>' +
+      '<div class="carousel-slide-content">' + buildSignatureHTML(sample.data) + '</div>';
+    track.appendChild(slide);
+  });
+
+  // Build dots
+  SAMPLE_SIGS.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    dot.addEventListener('click', function() { goTo(i); resetAuto(); });
+    dotsEl.appendChild(dot);
+  });
+
+  function goTo(index) {
+    current = (index + SAMPLE_SIGS.length) % SAMPLE_SIGS.length;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    dotsEl.querySelectorAll('.carousel-dot').forEach(function(d, i) {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function resetAuto() {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(function() { goTo(current + 1); }, 5000);
+  }
+
+  prevBtn.addEventListener('click', function() { goTo(current - 1); resetAuto(); });
+  nextBtn.addEventListener('click', function() { goTo(current + 1); resetAuto(); });
+
+  // Touch swipe support for mobile
+  var touchStartX = 0;
+  var viewport = track.parentElement;
+  viewport.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].clientX;
+  }, { passive: true });
+  viewport.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) {
+      dx < 0 ? goTo(current + 1) : goTo(current - 1);
+      resetAuto();
+    }
+  }, { passive: true });
+
+  resetAuto();
+}
+
 // Render on load if any fields are populated
-document.addEventListener('DOMContentLoaded', renderPreview);
+document.addEventListener('DOMContentLoaded', function() {
+  initCarousel();
+  renderPreview();
+});
 </script>
 
 </body>
