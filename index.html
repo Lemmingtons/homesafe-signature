@@ -462,22 +462,18 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Headshot Photo URL</label>
-            <input type="url" id="photoUrl" placeholder="https://example.com/your-photo.jpg" oninput="updatePhotoFromUrl()">
-            <span class="photo-hint">Paste a publicly hosted image URL (Gmail won't display uploaded files)</span>
-          </div>
-          <div class="form-group">
+            <label>Headshot Photo</label>
             <div class="photo-upload-area">
               <div class="photo-preview" id="photoPreviewThumb">
                 <span class="photo-placeholder">No photo</span>
               </div>
               <div class="photo-controls">
                 <label class="btn btn-secondary photo-upload-btn" for="photoFile">
-                  <span>Upload to preview</span>
+                  <span>Upload Photo</span>
                 </label>
                 <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoUpload(this)" style="display: none;">
                 <button class="btn btn-secondary photo-remove-btn" id="photoRemoveBtn" onclick="removePhoto()" style="display: none;">Remove</button>
-                <span class="photo-hint">Upload sets preview only — paste a hosted URL above for Gmail</span>
+                <span class="photo-hint">Photo is embedded directly — no external hosting needed</span>
               </div>
             </div>
           </div>
@@ -573,51 +569,31 @@ const HOSTED_ICONS = {
   linkedin:  'https://img.icons8.com/ios-filled/24/6B6B6B/linkedin.png'
 };
 
+let uploadedPhotoData = null;
+
 function handlePhotoUpload(input) {
   const file = input.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    const dataUri = e.target.result;
-
-    // Update thumbnail preview only (don't set URL field — base64 breaks Gmail)
+    uploadedPhotoData = e.target.result;
     const thumb = document.getElementById('photoPreviewThumb');
-    thumb.innerHTML = '<img src="' + dataUri + '" alt="Photo">';
+    thumb.innerHTML = '<img src="' + uploadedPhotoData + '" alt="Photo">';
     thumb.classList.add('has-photo');
     document.getElementById('photoRemoveBtn').style.display = '';
-
-    // If no hosted URL is set, use base64 for preview only
-    if (!document.getElementById('photoUrl').value.trim()) {
-      thumb.dataset.previewOnly = dataUri;
-    }
     renderPreview();
   };
   reader.readAsDataURL(file);
 }
 
-function updatePhotoFromUrl() {
-  const url = document.getElementById('photoUrl').value.trim();
-  const thumb = document.getElementById('photoPreviewThumb');
-  if (url) {
-    thumb.innerHTML = '<img src="' + url + '" alt="Photo">';
-    thumb.classList.add('has-photo');
-    delete thumb.dataset.previewOnly;
-  } else if (!thumb.dataset.previewOnly) {
-    thumb.innerHTML = '<span class="photo-placeholder">No photo</span>';
-    thumb.classList.remove('has-photo');
-  }
-  renderPreview();
-}
-
 function removePhoto() {
-  document.getElementById('photoUrl').value = '';
+  uploadedPhotoData = null;
   document.getElementById('photoFile').value = '';
 
   const thumb = document.getElementById('photoPreviewThumb');
   thumb.innerHTML = '<span class="photo-placeholder">No photo</span>';
   thumb.classList.remove('has-photo');
-  delete thumb.dataset.previewOnly;
 
   document.getElementById('photoRemoveBtn').style.display = 'none';
 
@@ -630,7 +606,7 @@ function getFormData() {
     title: document.getElementById('title').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
-    photoUrl: document.getElementById('photoUrl').value.trim(),
+    photoUrl: uploadedPhotoData || '',
     company: document.getElementById('company').value,
     website: document.getElementById('website').value.trim(),
     instagram: document.getElementById('instagram').value.trim(),
