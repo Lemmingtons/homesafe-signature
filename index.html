@@ -473,7 +473,7 @@
                 </label>
                 <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoUpload(this)" style="display: none;">
                 <button class="btn btn-secondary photo-remove-btn" id="photoRemoveBtn" onclick="removePhoto()" style="display: none;">Remove</button>
-                <span class="photo-hint">Photo is embedded directly — no external hosting needed</span>
+                <span class="photo-hint">Compressed to 90×90 and embedded — no external hosting needed</span>
               </div>
             </div>
           </div>
@@ -577,12 +577,28 @@ function handlePhotoUpload(input) {
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    uploadedPhotoData = e.target.result;
-    const thumb = document.getElementById('photoPreviewThumb');
-    thumb.innerHTML = '<img src="' + uploadedPhotoData + '" alt="Photo">';
-    thumb.classList.add('has-photo');
-    document.getElementById('photoRemoveBtn').style.display = '';
-    renderPreview();
+    // Resize to 90×90 JPEG at 50% quality before storing.
+    // Raw phone photos as data URIs can exceed 100,000 chars — Gmail's limit is 10,000.
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 90;
+      canvas.height = 90;
+      const ctx = canvas.getContext('2d');
+      // Center-crop to square then scale to 90×90
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 90, 90);
+      uploadedPhotoData = canvas.toDataURL('image/jpeg', 0.5);
+
+      const thumb = document.getElementById('photoPreviewThumb');
+      thumb.innerHTML = '<img src="' + uploadedPhotoData + '" alt="Photo">';
+      thumb.classList.add('has-photo');
+      document.getElementById('photoRemoveBtn').style.display = '';
+      renderPreview();
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -724,6 +740,11 @@ async function copyHTML(btn) {
 
   if (!html) {
     alert('Please fill in at least your name to generate a signature.');
+    return;
+  }
+
+  if (html.length > 10000) {
+    alert('Signature is ' + html.length.toLocaleString() + ' characters — Gmail\'s limit is 10,000. Try removing the photo or shortening your details.');
     return;
   }
 
