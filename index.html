@@ -570,21 +570,71 @@ const HOSTED_ICONS = {
 };
 
 let uploadedPhotoData = null;
+const GMAIL_SIGNATURE_LIMIT = 10000;
+const PHOTO_DATA_URI_LIMIT = 5200;
 
-function handlePhotoUpload(input) {
+async function handlePhotoUpload(input) {
   const file = input.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    uploadedPhotoData = e.target.result;
+  try {
+    uploadedPhotoData = await preparePhotoForSignature(file);
     const thumb = document.getElementById('photoPreviewThumb');
     thumb.innerHTML = '<img src="' + uploadedPhotoData + '" alt="Photo">';
     thumb.classList.add('has-photo');
     document.getElementById('photoRemoveBtn').style.display = '';
     renderPreview();
-  };
-  reader.readAsDataURL(file);
+  } catch (e) {
+    alert('Could not process this photo. Please try another image.');
+    input.value = '';
+  }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function preparePhotoForSignature(file) {
+  const src = await readFileAsDataUrl(file);
+  const img = await loadImage(src);
+  const cropSize = Math.min(img.naturalWidth, img.naturalHeight);
+  const sx = (img.naturalWidth - cropSize) / 2;
+  const sy = (img.naturalHeight - cropSize) / 2;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const sizes = [120, 108, 96, 90, 80];
+  const qualities = [0.82, 0.74, 0.66, 0.58, 0.5, 0.42];
+  let smallest = '';
+
+  for (const size of sizes) {
+    canvas.width = size;
+    canvas.height = size;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size);
+
+    for (const quality of qualities) {
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      smallest = !smallest || dataUrl.length < smallest.length ? dataUrl : smallest;
+      if (dataUrl.length <= PHOTO_DATA_URI_LIMIT) return dataUrl;
+    }
+  }
+
+  return smallest;
 }
 
 function removePhoto() {
@@ -626,7 +676,6 @@ function buildSignatureHTML(data) {
   };
   const logoUrl = LOGO_URLS[data.company] || LOGO_URLS.bpi;
 
-  // Build social icons row
   let socialCells = '';
   const socials = [
     { url: data.website, icon: HOSTED_ICONS.website, alt: 'Website' },
@@ -637,71 +686,30 @@ function buildSignatureHTML(data) {
 
   socials.forEach(s => {
     if (s.url) {
-      socialCells += `<td style="padding-right: 8px;"><a href="${s.url}" target="_blank" style="text-decoration: none;"><img src="${s.icon}" alt="${s.alt}" width="22" height="22" style="display: block; width: 22px; height: 22px; border: 0;" /></a></td>`;
+      socialCells += `<td style="padding-right:8px"><a href="${s.url}" style="text-decoration:none"><img src="${s.icon}" alt="${s.alt}" width="22" height="22" style="display:block;width:22px;height:22px;border:0"></a></td>`;
     }
   });
 
   let socialRow = '';
   if (socialCells) {
-    socialRow = `
-        <tr>
-          <td style="padding-top: 10px;">
-            <table cellpadding="0" cellspacing="0" border="0"><tr>${socialCells}</tr></table>
-          </td>
-        </tr>`;
+    socialRow = `<tr><td style="padding-top:10px"><table cellpadding="0" cellspacing="0" border="0"><tr>${socialCells}</tr></table></td></tr>`;
   }
 
-  // Photo column
   let photoCell = '';
   if (data.photoUrl) {
-    photoCell = `
-    <td style="vertical-align: top; padding-right: 18px;">
-      <img src="${data.photoUrl}" alt="${data.fullName}" width="90" height="90" style="border-radius: 50%; display: block; width: 90px; height: 90px; object-fit: cover; border: 0;" />
-    </td>`;
+    photoCell = `<td style="vertical-align:top;padding-right:18px"><img src="${data.photoUrl}" alt="${data.fullName}" width="90" height="90" style="border-radius:50%;display:block;width:90px;height:90px;object-fit:cover;border:0"></td>`;
   }
 
-  // Phone + email line
   let contactLine = '';
   if (data.phone && data.email) {
-    contactLine = `<a href="tel:${data.phone.replace(/\s/g, '')}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.phone}</a><span style="color: #d1d5db; padding-left: 10px; padding-right: 10px;">|</span><a href="mailto:${data.email}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.email}</a>`;
+    contactLine = `<a href="tel:${data.phone.replace(/\s/g, '')}" style="color:#6B6B6B;text-decoration:none;font-family:Arial,Helvetica,sans-serif">${data.phone}</a><span style="color:#d1d5db;padding-left:10px;padding-right:10px">|</span><a href="mailto:${data.email}" style="color:#6B6B6B;text-decoration:none;font-family:Arial,Helvetica,sans-serif">${data.email}</a>`;
   } else if (data.phone) {
-    contactLine = `<a href="tel:${data.phone.replace(/\s/g, '')}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.phone}</a>`;
+    contactLine = `<a href="tel:${data.phone.replace(/\s/g, '')}" style="color:#6B6B6B;text-decoration:none;font-family:Arial,Helvetica,sans-serif">${data.phone}</a>`;
   } else if (data.email) {
-    contactLine = `<a href="mailto:${data.email}" style="color: #6B6B6B; text-decoration: none; font-family: Arial, Helvetica, sans-serif;">${data.email}</a>`;
+    contactLine = `<a href="mailto:${data.email}" style="color:#6B6B6B;text-decoration:none;font-family:Arial,Helvetica,sans-serif">${data.email}</a>`;
   }
 
-  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #212529; line-height: 1.4;">
-  <tr>
-    ${photoCell}
-    <td style="vertical-align: top;">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td style="padding-bottom: 10px;">
-            <img src="${logoUrl}" alt="Homesafe Inspections" width="180" style="display: block; width: 180px; height: auto; border: 0;" />
-          </td>
-        </tr>
-        <tr>
-          <td style="padding-bottom: 10px;">
-            <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top: 2px solid #D9E670; font-size: 1px; line-height: 1px; height: 1px;">&nbsp;</td></tr></table>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding-bottom: 4px;">
-            <strong style="font-size: 14px; color: #212529; font-family: Arial, Helvetica, sans-serif;">${data.fullName}</strong>
-            <br />
-            <span style="font-size: 12px; color: #6B6B6B; font-family: Arial, Helvetica, sans-serif;">${data.title}</span>
-          </td>
-        </tr>
-        <tr>
-          <td style="font-size: 12px; color: #6B6B6B; font-family: Arial, Helvetica, sans-serif;">
-            ${contactLine}
-          </td>
-        </tr>
-        ${socialRow}
-      </table>
-    </td>
-  </tr>
-</table>`;
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#212529;line-height:1.4"><tr>${photoCell}<td style="vertical-align:top"><table cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-bottom:10px"><img src="${logoUrl}" alt="Homesafe Inspections" width="180" style="display:block;width:180px;height:auto;border:0"></td></tr><tr><td style="padding-bottom:10px"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:2px solid #D9E670;font-size:1px;line-height:1px;height:1px">&nbsp;</td></tr></table></td></tr><tr><td style="padding-bottom:4px"><strong style="font-size:14px;color:#212529;font-family:Arial,Helvetica,sans-serif">${data.fullName}</strong><br><span style="font-size:12px;color:#6B6B6B;font-family:Arial,Helvetica,sans-serif">${data.title}</span></td></tr><tr><td style="font-size:12px;color:#6B6B6B;font-family:Arial,Helvetica,sans-serif">${contactLine}</td></tr>${socialRow}</table></td></tr></table>`;
 }
 
 function renderPreview() {
@@ -724,6 +732,11 @@ async function copyHTML(btn) {
 
   if (!html) {
     alert('Please fill in at least your name to generate a signature.');
+    return;
+  }
+
+  if (html.length > GMAIL_SIGNATURE_LIMIT) {
+    alert('This signature is still too large for Gmail. Try a smaller photo or remove one social link.');
     return;
   }
 
