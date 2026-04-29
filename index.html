@@ -473,7 +473,7 @@
                 </label>
                 <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoUpload(this)" style="display: none;">
                 <button class="btn btn-secondary photo-remove-btn" id="photoRemoveBtn" onclick="removePhoto()" style="display: none;">Remove</button>
-                <span class="photo-hint">Compressed to 90×90 and embedded — no external hosting needed</span>
+                <span class="photo-hint">Auto-compressed to fit Gmail — highest quality that stays under the limit</span>
               </div>
             </div>
           </div>
@@ -577,21 +577,48 @@ function handlePhotoUpload(input) {
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    // Resize to 90×90 JPEG at 50% quality before storing.
-    // Raw phone photos as data URIs can exceed 100,000 chars — Gmail's limit is 10,000.
     const img = new Image();
     img.onload = function() {
+      // Adaptive compression: highest quality that fits Gmail's ~10k char limit.
+      // Budget: 7,000 chars for the photo (leaves ~3,000 for template + logo + socials).
+      // Tries from best visual quality down — first fit wins.
+      const CHAR_BUDGET = 7000;
       const canvas = document.createElement('canvas');
-      canvas.width = 90;
-      canvas.height = 90;
       const ctx = canvas.getContext('2d');
-      // Center-crop to square then scale to 90×90
+
+      // Center-crop source to square
       const size = Math.min(img.width, img.height);
       const sx = (img.width - size) / 2;
       const sy = (img.height - size) / 2;
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, 90, 90);
-      uploadedPhotoData = canvas.toDataURL('image/jpeg', 0.5);
 
+      // [dimension, quality] — ordered from best to worst visual result.
+      // 180px = 2x Retina at 90px display size; 128px = sharp at 1x; 90px = minimum.
+      const attempts = [
+        [180, 0.85], [180, 0.75], [180, 0.65], [180, 0.55],
+        [128, 0.90], [128, 0.80], [128, 0.70],
+        [90,  0.90], [90,  0.80],
+      ];
+
+      let best = null;
+      for (const [dim, q] of attempts) {
+        canvas.width = dim;
+        canvas.height = dim;
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, dim, dim);
+        const dataUrl = canvas.toDataURL('image/jpeg', q);
+        if (dataUrl.length <= CHAR_BUDGET) {
+          best = dataUrl;
+          break;
+        }
+      }
+
+      // Guaranteed fallback — always fits
+      if (!best) {
+        canvas.width = 90; canvas.height = 90;
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, 90, 90);
+        best = canvas.toDataURL('image/jpeg', 0.75);
+      }
+
+      uploadedPhotoData = best;
       const thumb = document.getElementById('photoPreviewThumb');
       thumb.innerHTML = '<img src="' + uploadedPhotoData + '" alt="Photo">';
       thumb.classList.add('has-photo');
