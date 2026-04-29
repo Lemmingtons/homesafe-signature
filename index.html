@@ -592,11 +592,13 @@ function handlePhotoUpload(input) {
       const sy = (img.height - size) / 2;
 
       // [dimension, quality] — ordered from best to worst visual result.
-      // 180px = 2x Retina at 90px display size; 128px = sharp at 1x; 90px = minimum.
+      // 180px = 2x Retina at 90px display size; 128px = sharper than 180 at very low q.
+      // 128/q=0.90 is visually better than 180/q=0.55, so 128 group splits the 180 group.
       const attempts = [
-        [180, 0.85], [180, 0.75], [180, 0.65], [180, 0.55],
+        [180, 0.85], [180, 0.75], [180, 0.65],
         [128, 0.90], [128, 0.80], [128, 0.70],
-        [90,  0.90], [90,  0.80],
+        [180, 0.55],
+        [90,  0.90], [90,  0.80], [90,  0.70],
       ];
 
       let best = null;
@@ -611,11 +613,11 @@ function handlePhotoUpload(input) {
         }
       }
 
-      // Guaranteed fallback — always fits
+      // True last resort: 90x90 at q=0.3 is ~400-600 chars — always fits any budget.
       if (!best) {
         canvas.width = 90; canvas.height = 90;
         ctx.drawImage(img, sx, sy, size, size, 0, 0, 90, 90);
-        best = canvas.toDataURL('image/jpeg', 0.75);
+        best = canvas.toDataURL('image/jpeg', 0.3);
       }
 
       uploadedPhotoData = best;
