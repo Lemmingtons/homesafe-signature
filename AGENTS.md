@@ -1,12 +1,12 @@
 # AGENTS.md — homesafe-signature
 
-Internal email signature generator for Homesafe franchise staff. Single-file app (`index.html`) — no build step, no dependencies. Deployed as a page inside the Homesafe Franchise Portal.
+Internal email signature generator for Homesafe franchise staff. Single-file app (`index.html`) — no build step, no dependencies. Deployed by GitHub Pages at https://lemmingtons.github.io/homesafe-signature/.
 
 ---
 
 ## Current handoff (2026-04-29)
 
-A Gmail "signature is too long" bug was fixed and validated. Two pre-existing issues remain for Codex to resolve.
+A Gmail "signature is too long" bug was fixed and validated. Team use should prefer hosted headshots from `assets/headshots/` so photos stay sharp without increasing Gmail signature size.
 
 **Full context:** see `HANDOFF.md` in this repo root.
 
@@ -50,7 +50,7 @@ if (photoFile.value) { photoFile.type = 'text'; photoFile.type = 'file'; }
 
 ## What was recently fixed (do not redo)
 
-`handlePhotoUpload()` now resizes photos to 90×90 JPEG at 50% quality via canvas before embedding. Raw phone photos were 27,000+ chars as data URIs; compressed output is ~2,900 chars. Gmail limit is 10,000 chars. Fix is in commit `163074f` and has been validated.
+`handlePhotoUpload()` resizes photos before embedding so the fallback still fits Gmail. For best quality, upload staff headshots to `assets/headshots/` and paste the GitHub Pages URL into the Hosted Headshot URL field.
 
 ---
 
@@ -60,8 +60,10 @@ if (photoFile.value) { photoFile.type = 'text'; photoFile.type = 'file'; }
 index.html          — entire app (~790 lines, HTML + CSS + JS inline)
 assets/
   homesafe-logo.png           — BPI logo (used in signatures)
+  headshots/                  — hosted team headshots for crisp email signatures
   ryan-headshot.jpg           — dev reference only, not used at runtime
   homesafe-strata-logo.png    — MISSING (see task 1 above)
+TEAM-WORKFLOW.md    — VA workflow for creating team signatures
 HANDOFF.md          — detailed fix summary and test checklist
 AGENTS.md           — this file
 ```
@@ -71,6 +73,7 @@ AGENTS.md           — this file
 ## Test checklist before next deploy
 
 - [ ] Upload a large phone photo — signature copies into Gmail without "too long" error
+- [ ] Paste a hosted headshot URL — preview and copied Gmail signature use that URL
 - [ ] Select Strata company — logo renders correctly (blocked on task 1)
 - [ ] Remove photo, re-upload same photo — `onchange` fires (blocked on task 2)
 - [ ] All four social links filled — icons appear in preview

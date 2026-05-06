@@ -387,6 +387,14 @@
     color: #9ca3af;
   }
 
+  .photo-hint.success {
+    color: #047857;
+  }
+
+  .photo-hint.warning {
+    color: #b45309;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 1100px) {
     .generator-grid { grid-template-columns: 1fr; }
@@ -473,9 +481,14 @@
                 </label>
                 <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoUpload(this)" style="display: none;">
                 <button class="btn btn-secondary photo-remove-btn" id="photoRemoveBtn" onclick="removePhoto()" style="display: none;">Remove</button>
-                <span class="photo-hint">Auto-compressed to fit Gmail — highest quality that stays under the limit</span>
+                <span class="photo-hint" id="photoStatus">Use a hosted photo URL for best quality. Upload is fallback only.</span>
               </div>
             </div>
+          </div>
+          <div class="form-group">
+            <label>Hosted Headshot URL</label>
+            <input type="url" id="photoUrl" placeholder="https://lemmingtons.github.io/homesafe-signature/assets/headshots/ryan-lehmann.jpg" oninput="handlePhotoUrlInput()">
+            <span class="photo-hint">Upload team headshots to <code>assets/headshots/</code>, then paste the GitHub Pages URL here.</span>
           </div>
 
           <div class="section-label">Social Links</div>
@@ -621,9 +634,9 @@ function handlePhotoUpload(input) {
       }
 
       uploadedPhotoData = best;
-      const thumb = document.getElementById('photoPreviewThumb');
-      thumb.innerHTML = '<img src="' + uploadedPhotoData + '" alt="Photo">';
-      thumb.classList.add('has-photo');
+      document.getElementById('photoUrl').value = '';
+      setPhotoPreview(uploadedPhotoData);
+      setPhotoStatus('Embedded fallback photo selected.', 'warning');
       document.getElementById('photoRemoveBtn').style.display = '';
       renderPreview();
     };
@@ -632,15 +645,61 @@ function handlePhotoUpload(input) {
   reader.readAsDataURL(file);
 }
 
-function removePhoto() {
-  uploadedPhotoData = null;
-  document.getElementById('photoFile').value = '';
+function handlePhotoUrlInput() {
+  const hostedUrl = getHostedPhotoUrl();
+  if (hostedUrl) {
+    setPhotoPreview(hostedUrl);
+    setPhotoStatus('Hosted URL selected. This gives the sharpest Gmail signature.', 'success');
+  } else if (document.getElementById('photoUrl').value.trim()) {
+    setPhotoStatus('Use a valid https photo URL.', 'warning');
+  } else if (uploadedPhotoData) {
+    setPhotoPreview(uploadedPhotoData);
+    setPhotoStatus('Embedded fallback photo selected.', 'warning');
+  } else {
+    clearPhotoPreview();
+    setPhotoStatus('Use a hosted photo URL for best quality. Upload is fallback only.', '');
+  }
+  renderPreview();
+}
 
+function getHostedPhotoUrl() {
+  const url = document.getElementById('photoUrl').value.trim();
+  if (!url || !/^https:\/\/[^"'<>\s]+$/i.test(url)) return '';
+  return url;
+}
+
+function setPhotoPreview(src) {
+  const thumb = document.getElementById('photoPreviewThumb');
+  thumb.innerHTML = '<img src="' + src + '" alt="Photo">';
+  thumb.classList.add('has-photo');
+  document.getElementById('photoRemoveBtn').style.display = '';
+}
+
+function clearPhotoPreview() {
   const thumb = document.getElementById('photoPreviewThumb');
   thumb.innerHTML = '<span class="photo-placeholder">No photo</span>';
   thumb.classList.remove('has-photo');
+}
+
+function setPhotoStatus(message, state) {
+  const status = document.getElementById('photoStatus');
+  status.textContent = message;
+  status.classList.toggle('success', state === 'success');
+  status.classList.toggle('warning', state === 'warning');
+}
+
+function removePhoto() {
+  uploadedPhotoData = null;
+  document.getElementById('photoUrl').value = '';
+
+  const photoFile = document.getElementById('photoFile');
+  photoFile.value = '';
+  if (photoFile.value) { photoFile.type = 'text'; photoFile.type = 'file'; }
+
+  clearPhotoPreview();
 
   document.getElementById('photoRemoveBtn').style.display = 'none';
+  setPhotoStatus('Use a hosted photo URL for best quality. Upload is fallback only.', '');
 
   renderPreview();
 }
@@ -651,7 +710,7 @@ function getFormData() {
     title: document.getElementById('title').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
-    photoUrl: uploadedPhotoData || '',
+    photoUrl: getHostedPhotoUrl() || uploadedPhotoData || '',
     company: document.getElementById('company').value,
     website: document.getElementById('website').value.trim(),
     instagram: document.getElementById('instagram').value.trim(),
